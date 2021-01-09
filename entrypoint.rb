@@ -20,7 +20,13 @@ def query_check_status(ref, check_name, token, workflow_name)
   }
   parsed = JSON.parse(response.body)
 
-  parsed["check_runs"].reject { |check| check['name'] == workflow_name }
+  filter_out_checks(parsed["check_runs"], workflow_name, check_name)
+end
+
+def filter_out_checks(checks, workflow_name, check_name)
+  checks
+    .reject { |check| check['name'] == workflow_name }
+    .select { |check| check_name.empty? || check['name'] == check_name }
 end
 
 def all_checks_complete(checks)
