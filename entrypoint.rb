@@ -34,9 +34,14 @@ def apply_regexp_filter(arr, str_regexp)
 end
 
 def filter_out_checks(checks, workflow_name, check_name, check_regexp)
+  puts "Filtering checks out from: [#{checks.map(&:name).join(', ')}]"
   checks.reject! { |check| check.name == workflow_name }
+  puts "Result from filtering out workflow_name (#{workflow_name}): [#{checks.map(&:name).join(', ')}]"
   checks.reject! { |check| !check_name.empty? && check.name == check_name }
-  apply_regexp_filter(checks, check_regexp) # if check_regexp is empty, it returns all
+  puts "Result from selecting check_name only (#{check_name}): [#{checks.map(&:name).join(', ')}]"
+  checks = apply_regexp_filter(checks, check_regexp) # if check_regexp is empty, it returns all
+  puts "Result from appling regexp filter (#{check_regexp}): [#{checks.map(&:name).join(', ')}]"
+  checks
 end
 
 def all_checks_complete(checks)
