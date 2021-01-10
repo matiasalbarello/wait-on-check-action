@@ -43,6 +43,12 @@ def all_checks_complete(checks)
   checks.all?(&:completed?)
 end
 
+def show_checks_statuses(checks)
+  puts "Checks #{checks.all?(&:completed?) ? "Completed" : "In Progress"}:"
+  puts checks.reduce("") { |message, check|
+    "#{message}#{check.conclusion_message}\n"
+  }
+end
 # check_name is the name of the "job" key in a workflow, or the full name if the "name" key
 # is provided for job. Probably, the "name" key should be kept empty to keep things short
 ref, check_name, check_regexp, token, wait, workflow_name = ARGV
@@ -50,6 +56,7 @@ wait = wait.to_i
 
 all_checks = query_check_status(ref, token)
 relevant_checks = filter_out_checks(all_checks, check_name, check_regexp, workflow_name)
+show_checks_statuses(checks)
 
 if relevant_checks.empty?
   puts "No checks against this ref to wait, exiting..."
@@ -62,12 +69,10 @@ until all_checks_complete(relevant_checks)
   sleep(wait)
   all_checks = query_check_status(ref, token)
   relevant_checks = filter_out_checks(all_checks, check_name, check_regexp, workflow_name)
+  show_checks_statuses(checks)
 end
 
-puts "Checks completed:"
-puts relevant_checks.reduce("") { |message, check|
-  "#{message}#{check.conclusion_message}\n"
-}
+show_checks_statuses(relevant_checks)
 
 # Bail if check is not success
 exit(false) unless all_checks.all?(&:success?)
