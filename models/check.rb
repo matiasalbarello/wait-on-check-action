@@ -8,7 +8,7 @@ class Check
   end
 
   def success?
-    conclussion == 'success'
+    conclusion == 'success'
   end
 
   def conclusion_message
