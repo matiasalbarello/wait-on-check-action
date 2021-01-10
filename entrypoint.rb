@@ -56,7 +56,7 @@ wait = wait.to_i
 
 all_checks = query_check_status(ref, token)
 relevant_checks = filter_out_checks(all_checks, check_name, check_regexp, workflow_name)
-show_checks_statuses(checks)
+show_checks_statuses(relevant_checks)
 
 if relevant_checks.empty?
   puts "No checks against this ref to wait, exiting..."
@@ -69,7 +69,7 @@ until all_checks_complete(relevant_checks)
   sleep(wait)
   all_checks = query_check_status(ref, token)
   relevant_checks = filter_out_checks(all_checks, check_name, check_regexp, workflow_name)
-  show_checks_statuses(checks)
+  show_checks_statuses(relevant_checks)
 end
 
 show_checks_statuses(relevant_checks)
