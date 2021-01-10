@@ -30,7 +30,7 @@ def parse_json_response(json)
 end
 
 def apply_regexp_filter(arr, str_regexp)
-  arr.select{ |i| i[Regexp.new(str_regexp)] }
+  arr.select{ |i| i.name[Regexp.new(str_regexp)] }
 end
 
 def filter_out_checks(checks, workflow_name, check_name, check_regexp)
