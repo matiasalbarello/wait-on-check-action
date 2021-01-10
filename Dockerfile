@@ -5,4 +5,4 @@ WORKDIR /app
 
 COPY entrypoint.rb app/entrypoint.rb
 COPY lib app/lib
-ENTRYPOINT ["entrypoint.rb"]
+ENTRYPOINT ["app/entrypoint.rb"]
