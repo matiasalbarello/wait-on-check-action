@@ -31,8 +31,7 @@ def parse_json_response(json)
   end
 end
 
-# filter_out_checks(parsed["check_runs"], workflow_name, check_name, use_regexp)
-def apply_regexp_filter(arr, str_regexp)  
+def apply_regexp_filter(arr, str_regexp)
   arr.select{ |i| i[Regexp.new(str_regexp)] }
 end
 
