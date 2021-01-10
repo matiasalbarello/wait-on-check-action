@@ -2,11 +2,11 @@
 require "net/http"
 require "uri"
 require "json"
-require "./lib/check"
+require_relative "./lib/check"
 
 REPO = ENV["GITHUB_REPOSITORY"]
 
-def query_check_status(ref, token)
+def query_check_status(ref, token = "")
   uri = URI.parse("https://api.github.com/repos/#{REPO}/commits/#{ref}/check-runs")
   request = Net::HTTP::Get.new(uri)
   request["Accept"] = "application/vnd.github.antiope-preview+json"

@@ -1,4 +1,8 @@
 FROM ruby:2.6.6-slim-buster
-COPY entrypoint.rb /entrypoint.rb
-COPY lib /lib
-ENTRYPOINT ["/entrypoint.rb"]
+
+RUN mkdir /app
+WORKDIR /app
+
+COPY entrypoint.rb app/entrypoint.rb
+COPY lib app/lib
+ENTRYPOINT ["app/entrypoint.rb"]
