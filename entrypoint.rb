@@ -34,14 +34,13 @@ def apply_regexp_filter(arr, str_regexp)
 end
 
 def filter_out_checks(checks, workflow_name, check_name, use_regexp)
-  checks
-    .reject! { |check| check.name == workflow_name }
-    .reject! { |check| check_name.empty? || check.name == check_name }
+  checks.reject! { |check| check.name == workflow_name }
+  checks.reject! { |check| check_name.empty? || check.name == check_name }
   apply_regexp_filter(checks, check_regexp) # if check_regexp is empty, it returns all
 end
 
 def all_checks_complete(checks)
-  checks.all?(:completed?)
+  checks.all?(&:completed?)
 end
 
 # check_name is the name of the "job" key in a workflow, or the full name if the "name" key
@@ -71,4 +70,4 @@ puts relevant_checks.reduce("") { |message, check|
 }
 
 # Bail if check is not success
-exit(false) unless all_checks.all?(:success?)
+exit(false) unless all_checks.all?(&:success?)
