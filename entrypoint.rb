@@ -57,7 +57,7 @@ if relevant_checks.empty?
 end
 
 until all_checks_complete(relevant_checks)
-  plural_part = all_other_checks.length > 1 ? "checks aren't" : "check isn't"
+  plural_part = relevant_checks.length > 1 ? "checks aren't" : "check isn't"
   puts "The requested #{plural_part} complete yet, will check back in #{wait} seconds..."
   sleep(wait)
   all_checks = query_check_status(ref, token)
