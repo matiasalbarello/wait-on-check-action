@@ -33,7 +33,7 @@ def apply_regexp_filter(arr, str_regexp)
   arr.select{ |i| i[Regexp.new(str_regexp)] }
 end
 
-def filter_out_checks(checks, workflow_name, check_name, use_regexp)
+def filter_out_checks(checks, workflow_name, check_name, check_regexp)
   checks.reject! { |check| check.name == workflow_name }
   checks.reject! { |check| check_name.empty? || check.name == check_name }
   apply_regexp_filter(checks, check_regexp) # if check_regexp is empty, it returns all
