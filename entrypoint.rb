@@ -60,7 +60,8 @@ ref, check_name, check_regexp, token, wait, workflow_name = ARGV
 wait = wait.to_i
 
 all_checks = query_check_status(ref, token)
-relevant_checks = filter_out_checks(all_checks, check_name, check_regexp, workflow_name)
+relevant_checks = filter_out_checks(all_checks, workflow_name, check_name, check_regexp)
+
 show_checks_statuses(relevant_checks)
 
 if relevant_checks.empty?
