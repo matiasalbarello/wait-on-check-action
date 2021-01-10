@@ -2,7 +2,7 @@
 require "net/http"
 require "uri"
 require "json"
-require_relative "./lib/check"
+require "./lib/check"
 
 REPO = ENV["GITHUB_REPOSITORY"]
 
