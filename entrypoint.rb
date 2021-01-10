@@ -6,7 +6,7 @@ require "./lib/check"
 
 REPO = ENV["GITHUB_REPOSITORY"]
 
-def query_check_status(ref, check_name, check_regexp, token, workflow_name)
+def query_check_status(ref, token)
   uri = URI.parse("https://api.github.com/repos/#{REPO}/commits/#{ref}/check-runs#{
     "?check_name=#{check_name}" unless check_name.empty?
   }")
