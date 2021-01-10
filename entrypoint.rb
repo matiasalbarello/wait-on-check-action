@@ -7,9 +7,7 @@ require "./lib/check"
 REPO = ENV["GITHUB_REPOSITORY"]
 
 def query_check_status(ref, token)
-  uri = URI.parse("https://api.github.com/repos/#{REPO}/commits/#{ref}/check-runs#{
-    "?check_name=#{check_name}" unless check_name.empty?
-  }")
+  uri = URI.parse("https://api.github.com/repos/#{REPO}/commits/#{ref}/check-runs")
   request = Net::HTTP::Get.new(uri)
   request["Accept"] = "application/vnd.github.antiope-preview+json"
   token.empty? || request["Authorization"] = "token #{token}"
