@@ -41,7 +41,7 @@ jobs:
         name: Test Basic Success (Implicit)
         conclusion: success
 
-  detect_changes:
+  detect_changes: 
     runs-on: ubuntu-latest
     steps:
     - name: Detect Changes
@@ -53,11 +53,14 @@ jobs:
           CHANGES=$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} -- app/)
         fi
         if [ -n "$CHANGES" ] || [ -z "$TARGET_BRANCH" ]; then
-          echo "::set-env name=CHANGED::true}"
+          echo ::set-output name=changed::true
+        else
+          echo ::set-output name=changed::false
         fi
 
   this_job_should_not_be_executed:
-    if: ${{env.CHANGED}}
+    needs: detect_changes
+    if: ${{ needs.detect_changes.output.changed }}
     runs-on: ubuntu-latest
     steps:
     - name: One line command
@@ -69,7 +72,8 @@ jobs:
         conclusion: failure
 
   this_job_should_be_executed:
-    if: ${{!env.CHANGED}}
+    needs: detect_changes
+    if: ${{ needs.detect_changes.output.changed }}
     runs-on: ubuntu-latest
     steps:
     - name: One line command
