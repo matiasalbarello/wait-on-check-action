@@ -247,14 +247,14 @@ jobs:
         name: Test Based On Job (Success)
         conclusion: ${{ job.status }}
 
-  test_based_job_failure:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - run: false
-    - uses: LouisBrunner/checks-action@v1.1.1
-      if: always()
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Test Based On Job (Failure)
-        conclusion: ${{ job.status }}
+  # test_based_job_failure:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - run: false
+  #   - uses: LouisBrunner/checks-action@v1.1.1
+  #     if: always()
+  #     with:
+  #       token: ${{ secrets.GITHUB_TOKEN }}
+  #       name: Test Based On Job (Failure)
+  #       conclusion: ${{ job.status }}
