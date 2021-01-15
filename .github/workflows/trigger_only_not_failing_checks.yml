@@ -16,6 +16,8 @@ jobs:
       run: bundle install
     - name: Run tests
       run: cd app && bundle exec rspec
+    - name: fail on purpose
+      run: false
 
     - uses: LouisBrunner/checks-action@v1.1.1
       with:
