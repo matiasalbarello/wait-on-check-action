@@ -73,7 +73,7 @@ jobs:
 
   this_job_should_be_executed:
     needs: detect_changes
-    if: ${{ needs.detect_changes.output.changed }}
+    if: ${{ !needs.detect_changes.output.changed }}
     runs-on: ubuntu-latest
     steps:
     - name: One line command
