@@ -1,4 +1,4 @@
-name: "examples"
+name: "success examples"
 on: [push]
 
 jobs:
@@ -37,16 +37,6 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         name: Test Basic Neutral
         conclusion: neutral
-
-  test_basic_cancelled:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: LouisBrunner/checks-action@v1.1.1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Test Basic Cancelled
-        conclusion: cancelled
 
   test_basic_action_required:
     runs-on: ubuntu-latest
