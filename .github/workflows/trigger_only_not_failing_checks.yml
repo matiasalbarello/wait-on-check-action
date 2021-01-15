@@ -16,8 +16,6 @@ jobs:
       run: bundle install
     - name: Run tests
       run: cd app && bundle exec rspec
-    - name: fail on purpose
-      run: false
 
     - uses: LouisBrunner/checks-action@v1.1.1
       with:
@@ -36,28 +34,49 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         wait-interval: 10 # seconds
         running-workflow-name: test_waiting_other_job
-        check-name: RSpec
-    - uses: LouisBrunner/checks-action@v1.1.1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        name: Test Basic Success (Implicit)
-        conclusion: success
-
-
-  test_waiting_other_job2:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Wait on tests
-      uses: ./
-      with:
-        ref: ${{ github.ref }}
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        wait-interval: 10 # seconds
-        running-workflow-name: test_waiting_other_job
         check-name: run_rspec
     - uses: LouisBrunner/checks-action@v1.1.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         name: Test Basic Success (Implicit)
         conclusion: success
+
+  detect_changes:
+    runs_on: ubuntu-latest
+    steps:
+    - name: Detect Changes
+      run: |
+        TARGET_BRANCH=${{ github.head_ref }}
+        if [ -z "$TARGET_BRANCH" ]; then
+          CHANGES=""
+        else
+          CHANGES=$(git diff --name-only origin/${{ github.base_ref }} origin/${{ github.head_ref }} -- app/)
+        fi
+        if [ -n "$CHANGES" ] || [ -z "$TARGET_BRANCH" ]; then
+          echo "::set-env name=CHANGED::true}"
+        fi
+
+  this_job_should_not_be_executed:
+    if: ${{env.CHANGED}}
+    runs_on: ubuntu-latest
+    steps:
+    - name: One line command
+      run: echo 'executed'
+    - uses: LouisBrunner/checks-action@v1.1.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Test Basic Success (Implicit)
+        conclusion: failure
+
+  this_job_should_be_executed:
+    if: ${{!env.CHANGED}}
+    runs_on: ubuntu-latest
+    steps:
+    - name: One line command
+      run: echo 'executed'
+    - uses: LouisBrunner/checks-action@v1.1.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        name: Basic Success
+        conclusion: success
+    
