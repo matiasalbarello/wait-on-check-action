@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "./application_service"
+require_relative "../models/check"
 require "net/http"
 require "uri"
 require "json"
@@ -37,13 +38,31 @@ class GithubChecksVerifier < ApplicationService
     response = Net::HTTP.start(uri.hostname, uri.port, req_options) { |http|
       http.request(request)
     }
-    parsed = JSON.parse(response.body)
 
-    parsed["check_runs"].reject { |check| check["name"] == workflow_name }
+    checks = parse_json_response(response.body)
+    filter_out_checks(checks, workflow_name, check_name, check_regexp)
+  end
+
+  def parse_json_response(json)
+    check_runs = JSON.parse(json)["check_runs"]
+
+    check_runs.map do |check|
+      Check.new(
+        name: check['name'],
+        status: check['status'],
+        conclusion: check['conclusion']
+      )
+    end
+  end
+  def filter_out_checks(checks, workflow_name, check_name, check_regexp)
+    checks.reject! { |check| check.name == workflow_name }
+    checks.reject! { |check| check.name != check_name } if !check_name.empty?
+
+    checks
   end
 
   def all_checks_complete(checks)
-    checks.all? { |check| check["status"] == "completed" }
+    checks.all?(&:completed?)
   end
 
   def fail_if_requested_check_never_run(check_name, all_checks)
@@ -53,7 +72,7 @@ class GithubChecksVerifier < ApplicationService
   end
 
   def fail_unless_all_success(checks)
-    return if checks.all? { |check| check["conclusion"] === "success" }
+    return if checks.all?(&:success?)
 
     raise StandardError, "One or more checks were not successful, exiting..."
   end
@@ -61,7 +80,7 @@ class GithubChecksVerifier < ApplicationService
   def show_checks_conclusion_message(checks)
     puts "Checks completed:"
     puts checks.reduce("") { |message, check|
-      "#{message}#{check["name"]}: #{check["status"]} (#{check["conclusion"]})\n"
+      "#{message}#{check.conclusion_message}\n"
     }
   end
 
