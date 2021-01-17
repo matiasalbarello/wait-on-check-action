@@ -6,7 +6,7 @@ require "uri"
 require "json"
 
 class GithubChecksVerifier < ApplicationService
-  attr_accessor :check_name, :token, :wait, :workflow_name, :github_api_uri
+  attr_accessor :check_name, :check_regexp, :token, :wait, :workflow_name, :github_api_uri
 
   def call
     wait_for_checks
@@ -17,14 +17,13 @@ class GithubChecksVerifier < ApplicationService
 
   # check_name is the name of the "job" key in a workflow, or the full name if the "name" key
   # is provided for job. Probably, the "name" key should be kept empty to keep things short
-  def initialize(ref, check_name, token, wait, workflow_name)
+  def initialize(ref, check_name, check_regexp, token, wait, workflow_name)
     @check_name = check_name
+    @check_regexp = Regexp.new(check_regexp)
     @token = token
     @wait = wait.to_i
     @workflow_name = workflow_name
-    @github_api_uri = "https://api.github.com/repos/#{ENV["GITHUB_REPOSITORY"]}/commits/#{ref}/check-runs#{
-      "?check_name=#{check_name}" unless check_name.empty?
-    }"
+    @github_api_uri = "https://api.github.com/repos/#{ENV["GITHUB_REPOSITORY"]}/commits/#{ref}/check-runs"
   end
 
   def query_check_status
@@ -38,9 +37,8 @@ class GithubChecksVerifier < ApplicationService
     response = Net::HTTP.start(uri.hostname, uri.port, req_options) { |http|
       http.request(request)
     }
-
     checks = parse_json_response(response.body)
-    filter_out_checks(checks, workflow_name, check_name, check_regexp)
+    filter_out_checks(checks)
   end
 
   def parse_json_response(json)
@@ -54,9 +52,15 @@ class GithubChecksVerifier < ApplicationService
       )
     end
   end
-  def filter_out_checks(checks, workflow_name, check_name, check_regexp)
+
+  def apply_regexp_filter(checks)
+    checks.select!{ |check| check.name[check_regexp] }
+  end
+
+  def filter_out_checks(checks)
     checks.reject! { |check| check.name == workflow_name }
     checks.reject! { |check| check.name != check_name } if !check_name.empty?
+    apply_regexp_filter(checks) # if check_regexp is empty, it returns all
 
     checks
   end
@@ -65,8 +69,12 @@ class GithubChecksVerifier < ApplicationService
     checks.all?(&:completed?)
   end
 
-  def fail_if_requested_check_never_run(check_name, all_checks)
-    return unless !check_name.empty? && all_checks.empty?
+  def filters_present?
+    (!check_name.nil? && !check_name.empty?) || (!check_regexp.nil? && !check_regexp.empty?)
+  end
+
+  def fail_if_requested_check_never_run(checks)
+    return unless filters_present? && checks&.empty?
 
     raise StandardError, "The requested check was never run against this ref, exiting..."
   end
@@ -87,7 +95,7 @@ class GithubChecksVerifier < ApplicationService
   def wait_for_checks
     all_checks = query_check_status
 
-    fail_if_requested_check_never_run(check_name, all_checks)
+    fail_if_requested_check_never_run(all_checks)
 
     until all_checks_complete(all_checks)
       plural_part = all_checks.length > 1 ? "checks aren't" : "check isn't"

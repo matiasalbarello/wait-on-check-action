@@ -9,8 +9,8 @@ module Helpers
 
   def mock_http_success(with_json:)
     response = Net::HTTPSuccess.new(1.0, '200', 'OK')
-    allow_any_instance_of(Net::HTTP).to receive(:request) { response }
-    allow(response).to receive(:body) { with_json }  
+    allow_any_instance_of(Net::HTTP).to receive(:start) { response }
+    allow(response).to receive(:body) { with_json }
   end
 
   def with_captured_stdout

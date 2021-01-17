@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe GithubChecksVerifier do
-  let(:service) { described_class.new("ref", "check_name", "token", "0", "invoking_check") }
+  let(:service) { described_class.new("ref", "check_completed", "", "token", "0", "invoking_check") }
 
   describe "#call" do
     before { allow(service).to receive(:wait_for_checks).and_raise(StandardError, "test error") }
@@ -30,8 +30,8 @@ describe GithubChecksVerifier do
     it "returns true if all checks are in status complete" do
       expect(service.all_checks_complete(
         [
-          { "status" => "completed" },
-          { "status" => "completed" }
+          Check.new(name: "test", status: "completed", conclusion: "success"),
+          Check.new(name: "test", status: "completed", conclusion: "failure")
         ]
       )).to be true
     end
@@ -40,8 +40,8 @@ describe GithubChecksVerifier do
       it "false if some check still queued" do
         expect(service.all_checks_complete(
           [
-            { "status" => "completed" },
-            { "status" => "queued" }
+            Check.new(name: "test", status: "completed", conclusion: "success"),
+            Check.new(name: "test", status: "queued")
           ]
         )).to be false
       end
@@ -49,8 +49,8 @@ describe GithubChecksVerifier do
       it "false if some check is in progress" do
         expect(service.all_checks_complete(
           [
-            { "status" => "completed" },
-            { "status" => "in_progress" }
+            Check.new(name: "test", status: "completed", conclusion: "success"),
+            Check.new(name: "test", status: "in_progress")
           ]
         )).to be false
       end
@@ -74,7 +74,7 @@ describe GithubChecksVerifier do
       all_checks = []
 
       expect do
-        service.fail_if_requested_check_never_run(check_name, all_checks)
+        service.fail_if_requested_check_never_run(all_checks)
       end.to raise_error(StandardError, "The requested check was never run against this ref, exiting...")
     end
   end
@@ -82,8 +82,8 @@ describe GithubChecksVerifier do
   describe "#fail_unless_all_success" do
     it "raises an exception if some check is not successful" do
       all_checks = [
-        { "name" => "test", "status" => "success" },
-        { "name" => "test", "status" => "failure" }
+        Check.new(name: "test", status: "complete", conclusion: "success"),
+        Check.new(name: "test", status: "complete", conclusion: "failure")
       ]
 
       expect do
@@ -94,10 +94,88 @@ describe GithubChecksVerifier do
 
   describe "#show_checks_conclusion_message" do
     it "prints successful message to standard output" do
-      checks = [{ "name" => "check_completed", "status" => "completed", "conclusion" => "success" }]
+      checks = [Check.new(name: "check_completed", status: "completed", conclusion: "success")]
       output = with_captured_stdout{ service.show_checks_conclusion_message(checks) }
 
       expect(output).to include("check_completed: completed (success)")
+    end
+  end
+
+  describe "#filter_out_checks" do
+    it "filters out all but check_name" do
+      checks = [
+        Check.new(name: "check_name", status: "queued"),
+        Check.new(name: "other_check", status: "queued")
+      ]
+
+      service = described_class.new("ref", "check_name", "", "", "0", "")
+      service.filter_out_checks(checks)
+      expect(checks.map(&:name)).to all( eq "check_name" )
+    end
+
+    it "does not filter by check_name if it's empty" do
+      checks = [
+        Check.new(name: "check_name", status: "queued"),
+        Check.new(name: "other_check", status: "queued")
+      ]
+
+      service = described_class.new("ref", "", "", "", "0", "")
+      allow(service).to receive(:apply_regexp_filter).with(checks).and_return(checks)
+      service.filter_out_checks(checks)
+      expect(checks.size).to eq 2
+    end
+
+    it "filters out the workflow_name" do
+      checks = [
+        Check.new(name: "workflow_name", status: "pending"),
+        Check.new(name: "other_check", status: "queued")
+      ]
+
+      service = described_class.new("ref", "", "", "", "0", "workflow_name")
+      service.filter_out_checks(checks)
+      expect(checks.map(&:name)).not_to include("workflow_name")
+    end
+
+    it "apply the regexp filter" do
+      checks = [
+        Check.new(name: "test", status: "pending"),
+        Check.new(name: "test", status: "queued")
+      ]
+      allow(service).to receive(:apply_regexp_filter)
+      service.filter_out_checks(checks)
+
+      # only assert that the method is called. The functionality will be tested
+      # on #apply_regexp_filter tests
+      expect(service).to have_received(:apply_regexp_filter)
+    end
+  end
+
+  describe "#apply_regexp_filter" do
+    it "simple regexp" do
+      checks = [
+        Check.new(name: "check_name", status: "queued"),
+        Check.new(name: "other_check", status: "queued")
+      ]
+
+      service.check_regexp = Regexp.new('._check')
+      service.apply_regexp_filter(checks)
+
+      expect(checks.map(&:name)).to include("other_check")
+      expect(checks.map(&:name)).not_to include("check_name")
+    end
+
+    it "complex regexp" do
+
+      checks = [
+        Check.new(name: "test@example.com", status: "queued"),
+        Check.new(name: "other_check", status: "queued")
+      ]
+
+      service.check_regexp = Regexp.new('\A[\w.+-]+@\w+\.\w+\z')
+      service.apply_regexp_filter(checks)
+
+      expect(checks.map(&:name)).not_to include("other_check")
+      expect(checks.map(&:name)).to include("test@example.com")
     end
   end
 end
