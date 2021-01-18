@@ -1,7 +1,7 @@
 require "spec_helper"
 
 describe GithubChecksVerifier do
-  let(:service) { described_class.new("ref", "check_completed", "", "token", "0", "invoking_check") }
+  let(:service) { described_class.new("ref", "check_completed", "", "token", "0", "invoking_check", "10") }
 
   describe "#call" do
     before { allow(service).to receive(:wait_for_checks).and_raise(StandardError, "test error") }

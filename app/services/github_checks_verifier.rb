@@ -6,7 +6,7 @@ require "uri"
 require "json"
 
 class GithubChecksVerifier < ApplicationService
-  attr_accessor :check_name, :check_regexp, :token, :wait, :workflow_name, :github_api_uri, :consumed_time_seconds
+  attr_accessor :check_name, :check_regexp, :token, :wait, :workflow_name, :github_api_uri, :consumed_time_seconds, :timeout_minutes
 
   def call
     wait_for_checks
@@ -17,8 +17,9 @@ class GithubChecksVerifier < ApplicationService
 
   # check_name is the name of the "job" key in a workflow, or the full name if the "name" key
   # is provided for job. Probably, the "name" key should be kept empty to keep things short
-  def initialize(ref, check_name, check_regexp, token, wait, workflow_name)
+  def initialize(ref, check_name, check_regexp, token, wait, workflow_nam, timeout_minutes)
     @consumed_time_seconds = 0
+    @timeout_minutes = timeout_minutes.to_i
     @check_name = check_name
     @check_regexp = Regexp.new(check_regexp)
     @token = token
