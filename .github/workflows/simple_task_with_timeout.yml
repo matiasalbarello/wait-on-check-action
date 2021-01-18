@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  simple-task:
+  delayed_task:
     runs-on: ubuntu-latest
 
     steps:
