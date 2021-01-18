@@ -110,7 +110,7 @@ class GithubChecksVerifier < ApplicationService
     until all_checks_complete(all_checks) || time_is_out?
       plural_part = all_checks.length > 1 ? "checks aren't" : "check isn't"
       puts "The requested #{plural_part} complete yet, will check back in #{wait} seconds..."
-      consumed_time_seconds += wait
+      @consumed_time_seconds += wait
       sleep(wait)
       all_checks = query_check_status
     end
