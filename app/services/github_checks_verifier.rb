@@ -92,18 +92,28 @@ class GithubChecksVerifier < ApplicationService
     }
   end
 
+  def time_is_out?
+    consumed_time_seconds % 60 > timeout_minutes
+  end
+
+  def exit_with_timeout
+    exit 124
+  end
+
   def wait_for_checks
     all_checks = query_check_status
 
     fail_if_requested_check_never_run(all_checks)
 
-    until all_checks_complete(all_checks)
+    until all_checks_complete(all_checks) || time_is_out?
       plural_part = all_checks.length > 1 ? "checks aren't" : "check isn't"
       puts "The requested #{plural_part} complete yet, will check back in #{wait} seconds..."
+      consumed_time_seconds += wait
       sleep(wait)
       all_checks = query_check_status
     end
 
+    exit_with_timeout if time_is_out?
     show_checks_conclusion_message(all_checks)
 
     fail_unless_all_success(all_checks)

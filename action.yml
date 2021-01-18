@@ -26,6 +26,10 @@ inputs:
     description: "Name of the workflow to be ignored (the one who is waiting for the rest)"
     required: false
     default: ""
+  timeout-minutes:
+    description: "Minutes it should wait before timeout. It will run on timeout error if job's timeout-minutes is reached first."
+    required: false
+    default: "30"
 runs:
   using: "docker"
   image: "Dockerfile"

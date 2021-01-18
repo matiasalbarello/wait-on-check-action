@@ -1,0 +1,31 @@
+name: Wait with timeout
+on:
+  push:
+    tags:
+      - 'test-with-timeout/v*' # e.g. test-using-check-name/v1_2_3
+  workflow_dispatch:
+
+jobs:
+  wait-with-timeout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Wait on tests
+        uses: ./
+        with:
+          ref: ${{ github.ref }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 30 # seconds
+          timeout-minutes: 1
+          running-workflow-name: wait-with-timeout
+          check-name: delayed_task
+
+      - name: Delete tag
+        run: git push --delete origin ${{ github.ref }}
+        if: ${{ contains(github.ref, 'test-using-check-name') }}
+
+      - name: Success
+        run: echo 'success!'

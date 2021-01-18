@@ -1,0 +1,17 @@
+name: Simple Task with Timeout
+
+on:
+  push:
+    branches:
+  workflow_dispatch:
+
+jobs:
+  simple-task:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: delay execution
+        run: sleep 70s
+
+      - name: Run a one-line script
+        run: echo 'done'
