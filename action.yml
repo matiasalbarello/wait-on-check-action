@@ -40,7 +40,7 @@ runs:
     - ${{ inputs.repo-token }}
     - ${{ inputs.wait-interval }}
     - ${{ inputs.running-workflow-name }}
-    - ${{ inputs.timeout_minutes }}
+    - ${{ inputs.timeout-minutes }}
 branding:
   icon: "check-circle"
   color: "green"
