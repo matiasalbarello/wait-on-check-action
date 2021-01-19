@@ -2,7 +2,10 @@ require "spec_helper"
 require "ostruct"
 
 describe GithubChecksVerifier do
-  let(:service) { described_class.new("", "", "", "", "0", "") }
+  let(:service) do
+    described_class.config.client = Octokit::Client.new
+    described_class.new
+  end
 
   describe "#call" do
     before { allow(service).to receive(:wait_for_checks).and_raise(StandardError, "test error") }
@@ -64,8 +67,7 @@ describe GithubChecksVerifier do
       all_checks = load_checks_from_yml("all_checks_results.json")
       mock_api_response(all_checks)
 
-      service = described_class.new("", "", "", "", "0", "")
-      service.workflow_name = "invoking_check"
+      service.config.workflow_name = "invoking_check"
 
       result = service.query_check_status
 
@@ -113,7 +115,7 @@ describe GithubChecksVerifier do
         OpenStruct.new(name: "other_check", status: "queued")
       ]
 
-      service = described_class.new("ref", "check_name", "", "", "0", "")
+      service.config.check_name = "check_name"
       service.apply_filters(checks)
       expect(checks.map(&:name)).to all( eq "check_name" )
     end
@@ -124,9 +126,10 @@ describe GithubChecksVerifier do
         OpenStruct.new(name: "other_check", status: "queued")
       ]
 
-      service = described_class.new("", "", "", "", "0", "")
-      # allow(service).to receive(:apply_regexp_filter).with(checks).and_return(checks)
+      service.config.check_name = ""
+      allow(service).to receive(:apply_regexp_filter).with(checks).and_return(checks)
       service.apply_filters(checks)
+
       expect(checks.size).to eq 2
     end
 
@@ -135,8 +138,9 @@ describe GithubChecksVerifier do
         OpenStruct.new(name: "workflow_name", status: "pending"),
         OpenStruct.new(name: "other_check", status: "queued")
       ]
-      service = described_class.new("", "", "", "", "0", "workflow_name")
+      service.config.workflow_name = "workflow_name"
       service.apply_filters(checks)
+
       expect(checks.map(&:name)).not_to include("workflow_name")
     end
 
