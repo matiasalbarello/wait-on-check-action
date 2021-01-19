@@ -21,6 +21,7 @@ describe GithubChecksVerifier do
 
       all_successful_checks = load_checks_from_yml("all_checks_successfully_completed.json")
       mock_api_response(all_successful_checks)
+      service.workflow_name = "invoking_check"
       output = with_captured_stdout{ service.wait_for_checks }
 
       expect(output).to include("The requested check isn't complete yet, will check back in #{service.wait} seconds...")
@@ -102,6 +103,41 @@ describe GithubChecksVerifier do
       output = with_captured_stdout{ service.show_checks_conclusion_message(checks) }
 
       expect(output).to include("check_completed: completed (success)")
+    end
+  end
+
+  describe "#apply_filters" do
+    it "filters out all but check_name" do
+      checks = [
+        OpenStruct.new(name: "check_name", status: "queued"),
+        OpenStruct.new(name: "other_check", status: "queued")
+      ]
+
+      service = described_class.new("ref", "check_name", "", "0", "")
+      service.apply_filters(checks)
+      expect(checks.map(&:name)).to all( eq "check_name" )
+    end
+
+    it "does not filter by check_name if it's empty" do
+      checks = [
+        OpenStruct.new(name: "check_name", status: "queued"),
+        OpenStruct.new(name: "other_check", status: "queued")
+      ]
+
+      service = described_class.new("", "", "", "0", "")
+      # allow(service).to receive(:apply_regexp_filter).with(checks).and_return(checks)
+      service.apply_filters(checks)
+      expect(checks.size).to eq 2
+    end
+
+    it "filters out the workflow_name" do
+      checks = [
+        OpenStruct.new(name: "workflow_name", status: "pending"),
+        OpenStruct.new(name: "other_check", status: "queued")
+      ]
+      service = described_class.new("", "", "", "0", "workflow_name")
+      service.apply_filters(checks)
+      expect(checks.map(&:name)).not_to include("workflow_name")
     end
   end
 end

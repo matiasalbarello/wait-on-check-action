@@ -28,12 +28,15 @@ class GithubChecksVerifier < ApplicationService
 
   def query_check_status
     checks = @client.check_runs_for_ref(@repo, @ref, { :accept => "application/vnd.github.antiope-preview+json"}).check_runs
+    apply_filters(checks)
+  end
+
+  def apply_filters(checks)
     checks.reject!{ |check| check.name == workflow_name }
-    checks.select!{ |check| check.name == check_name } if check_name
+    checks.select!{ |check| check.name == check_name } if !check_name.empty?
 
     checks
   end
-
 
   def all_checks_complete(checks)
     checks.all?{ |check| check.status == "completed" }
