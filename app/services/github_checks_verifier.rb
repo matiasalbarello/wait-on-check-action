@@ -6,7 +6,7 @@ require "json"
 require "octokit"
 
 class GithubChecksVerifier < ApplicationService
-  attr_accessor :check_name, :wait, :workflow_name, :client, :repo, :ref
+  attr_accessor :check_name, :check_regexp, :wait, :workflow_name, :client, :repo, :ref
 
   def call
     wait_for_checks
@@ -17,11 +17,12 @@ class GithubChecksVerifier < ApplicationService
 
   # check_name is the name of the "job" key in a workflow, or the full name if the "name" key
   # is provided for job. Probably, the "name" key should be kept empty to keep things short
-  def initialize(ref, check_name, token, wait, workflow_name)
+  def initialize(ref, check_name, check_regexp, token, wait, workflow_name)
     @client = Octokit::Client.new(access_token: token)
     @repo = ENV["GITHUB_REPOSITORY"]
     @ref = ref
     @check_name = check_name
+    @check_regexp = check_regexp
     @wait = wait.to_i
     @workflow_name = workflow_name
   end
@@ -34,8 +35,13 @@ class GithubChecksVerifier < ApplicationService
   def apply_filters(checks)
     checks.reject!{ |check| check.name == workflow_name }
     checks.select!{ |check| check.name == check_name } if !check_name.empty?
+    apply_regexp_filter(checks)
 
     checks
+  end
+
+  def apply_regexp_filter(checks)
+    checks.select!{ |check| check.name[check_regexp] }
   end
 
   def all_checks_complete(checks)

@@ -2,7 +2,7 @@ require "spec_helper"
 require "ostruct"
 
 describe GithubChecksVerifier do
-  let(:service) { described_class.new("", "", "", "0", "") }
+  let(:service) { described_class.new("", "", "", "", "0", "") }
 
   describe "#call" do
     before { allow(service).to receive(:wait_for_checks).and_raise(StandardError, "test error") }
@@ -64,7 +64,7 @@ describe GithubChecksVerifier do
       all_checks = load_checks_from_yml("all_checks_results.json")
       mock_api_response(all_checks)
 
-      service = described_class.new("", "", "", "0", "")
+      service = described_class.new("", "", "", "", "0", "")
       service.workflow_name = "invoking_check"
 
       result = service.query_check_status
@@ -113,7 +113,7 @@ describe GithubChecksVerifier do
         OpenStruct.new(name: "other_check", status: "queued")
       ]
 
-      service = described_class.new("ref", "check_name", "", "0", "")
+      service = described_class.new("ref", "check_name", "", "", "0", "")
       service.apply_filters(checks)
       expect(checks.map(&:name)).to all( eq "check_name" )
     end
@@ -124,7 +124,7 @@ describe GithubChecksVerifier do
         OpenStruct.new(name: "other_check", status: "queued")
       ]
 
-      service = described_class.new("", "", "", "0", "")
+      service = described_class.new("", "", "", "", "0", "")
       # allow(service).to receive(:apply_regexp_filter).with(checks).and_return(checks)
       service.apply_filters(checks)
       expect(checks.size).to eq 2
@@ -135,9 +135,50 @@ describe GithubChecksVerifier do
         OpenStruct.new(name: "workflow_name", status: "pending"),
         OpenStruct.new(name: "other_check", status: "queued")
       ]
-      service = described_class.new("", "", "", "0", "workflow_name")
+      service = described_class.new("", "", "", "", "0", "workflow_name")
       service.apply_filters(checks)
       expect(checks.map(&:name)).not_to include("workflow_name")
+    end
+
+    it "apply the regexp filter" do
+      checks = [
+        OpenStruct.new(name: "test", status: "pending"),
+        OpenStruct.new(name: "test", status: "queued")
+      ]
+      allow(service).to receive(:apply_regexp_filter)
+      service.apply_filters(checks)
+
+      # only assert that the method is called. The functionality will be tested
+      # on #apply_regexp_filter tests
+      expect(service).to have_received(:apply_regexp_filter)
+    end
+  end
+
+  describe "#apply_regexp_filter" do
+    it "simple regexp" do
+      checks = [
+        OpenStruct.new(name: "check_name", status: "queued"),
+        OpenStruct.new(name: "other_check", status: "queued")
+      ]
+
+      service.check_regexp = Regexp.new('._check')
+      service.apply_regexp_filter(checks)
+
+      expect(checks.map(&:name)).to include("other_check")
+      expect(checks.map(&:name)).not_to include("check_name")
+    end
+
+    it "complex regexp" do
+      checks = [
+        OpenStruct.new(name: "test@example.com", status: "queued"),
+        OpenStruct.new(name: "other_check", status: "queued")
+      ]
+
+      service.check_regexp = Regexp.new('\A[\w.+-]+@\w+\.\w+\z')
+      service.apply_regexp_filter(checks)
+
+      expect(checks.map(&:name)).not_to include("other_check")
+      expect(checks.map(&:name)).to include("test@example.com")
     end
   end
 end
