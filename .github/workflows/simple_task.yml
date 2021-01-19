@@ -3,12 +3,23 @@ name: Simple Task
 on:
   push:
     branches:
-    tags:
+  workflow_dispatch:
+    inputs:
+      delay_seconds:
+        description: 'Time to delay'
+        required: false
+        default: 60
 
 jobs:
   simple-task:
     runs-on: ubuntu-latest
 
     steps:
-      - name: simple task
+      - name: delay execution if manually executed
+        env:
+          input_delay: ${{ github.event.inputs.delay_seconds }}
+        run: sleep $input_delay
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+
+      - name: Run a one-line script
         run: echo 'done'
