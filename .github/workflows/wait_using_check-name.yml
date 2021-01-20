@@ -73,10 +73,19 @@ jobs:
           check-name: failure_waited_task_n1
 
       - uses: LouisBrunner/checks-action@v1.1.1
-        if: always()
+        if: failure()
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: RSpec
-          conclusion: ${{ job.status == false }}
+          name: Job succeed on failing
+          conclusion: success
           output: |
             {"summary": "Fail as expected => success"}
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        if: success()
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: Job fail on failing
+          conclusion: failure
+          output: |
+            {"summary": "Didn't fail as expected => failure"}
