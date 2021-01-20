@@ -18,9 +18,11 @@ class GithubChecksVerifier < ApplicationService
     exit(false)
   end
 
-  def query_check_status
+  def query_check_status(filtering = true)
     checks = client.check_runs_for_ref(repo, ref, { :accept => "application/vnd.github.antiope-preview+json"}).check_runs
-    apply_filters(checks)
+    apply_filters(checks) if filtering
+
+    checks
   end
 
   def apply_filters(checks)
@@ -43,10 +45,28 @@ class GithubChecksVerifier < ApplicationService
     check_name.present? || check_regexp.present?
   end
 
-  def fail_if_requested_check_never_run(check_name, all_checks)
-    return unless check_name.present? && all_checks.blank?
+  def get_debug_output
+    checks_before_filter = query_check_status(false)
+    filters_applied = [
+      { name: 'workflow_name', value: workflow_name },
+      { name: 'check_name', value: check_name },
+      { name: 'check_regexp', value: check_regexp }
+    ]
 
-    raise StandardError, "The requested check was never run against this ref, exiting..."
+    message = "Checks before filter:\n"
+    message += checks_status_message(checks_before_filter)
+    message += "\nFilters applied:"
+    message += filters_applied.reduce { |m, filter|
+      "#{m}#{filter["name"]}: #{filter["value"]}\n"
+    }
+  end
+
+  def fail_if_requested_check_never_run(all_checks, with_debug = true)
+    return unless filters_present? && all_checks.blank?
+
+    message = "The requested check was never run against this ref, exiting ...\n"
+    message += get_debug_output if with_debug
+    raise StandardError, message
   end
 
   def fail_unless_all_success(checks)
@@ -55,17 +75,22 @@ class GithubChecksVerifier < ApplicationService
     raise StandardError, "One or more checks were not successful, exiting..."
   end
 
-  def show_checks_conclusion_message(checks)
-    puts "Checks completed:"
-    puts checks.reduce("") { |message, check|
+  def checks_status_message(checks)
+    message = ""
+    message += "Checks completed:\n" if all_checks_complete(checks)
+    message += checks.reduce("") { |message, check|
       "#{message}#{check.name}: #{check.status} (#{check.conclusion})\n"
     }
+  end
+
+  def show_checks_conclusion_message(checks)
+    puts checks_status_message(checks)
   end
 
   def wait_for_checks
     all_checks = query_check_status
 
-    fail_if_requested_check_never_run(check_name, all_checks)
+    fail_if_requested_check_never_run(all_checks)
 
     until all_checks_complete(all_checks)
       plural_part = all_checks.length > 1 ? "checks aren't" : "check isn't"
