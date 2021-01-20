@@ -33,7 +33,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10 # seconds
           running-workflow-name: wait-for-check-name
-          check-name: success_waited_task_n1
+          check-name: waited_task_n1
 
       - name: Delete tag
         run: git push --delete origin ${{ github.ref }}
