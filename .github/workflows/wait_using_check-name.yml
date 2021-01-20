@@ -77,4 +77,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: RSpec
           conclusion: ${{ !job.status }}
-          output: {"summary": "Fail as expected => success"}
+          output: |
+            {"summary": "Fail as expected => success"}
