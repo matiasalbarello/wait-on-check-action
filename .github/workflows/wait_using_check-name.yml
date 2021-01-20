@@ -8,12 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  success_waited_task_n1:
+  waited_task_n1:
     runs-on: ubuntu-latest
     steps:
       - name: Run a one-line script
         run: echo 'done'
-  success_unwaited_task_n1:
+  unwaited_task_n1:
     runs-on: ubuntu-latest
     steps:
       - name: Run a one-line script
@@ -41,51 +41,3 @@ jobs:
 
       - name: Success
         run: echo 'success!'
-
-# -- Test: Should fail when awaited task fails
-
-  failure_waited_task_n1:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run a one-line script
-        run: false
-  failure_unwaited_task_n1:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run a one-line script
-        run: false
-
-  wait-for-check-that-fails:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Wait on tests
-        uses: ./
-        with:
-          ref: ${{ github.sha }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10 # seconds
-          running-workflow-name: wait-for-check-name
-          check-name: failure_waited_task_n1
-
-      - uses: LouisBrunner/checks-action@v1.1.1
-        if: failure()
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: Job succeed on failing
-          conclusion: success
-          output: |
-            {"summary": "Fail as expected => success"}
-
-      - uses: LouisBrunner/checks-action@v1.1.1
-        if: success()
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          name: Job fail on failing
-          conclusion: failure
-          output: |
-            {"summary": "Didn't fail as expected => failure"}

@@ -5,7 +5,20 @@ on:
   push:
     tags:
       - 'test-using-regexp/v*' # e.g. test-using-regexp/v1_2_3
+  workflow_dispatch:
+
 jobs:
+  waited_task_n2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: echo 'done'
+  unwaited_task_n2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: echo 'done'
+
   wait-for-check-regexp:
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +33,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10 # seconds
           running-workflow-name: wait-for-check-regexp
-          check-regexp: .?-task
+          check-regexp: \Awaited_.?
 
       - name: Delete tag
         run: git push --delete origin ${{ github.ref }}
