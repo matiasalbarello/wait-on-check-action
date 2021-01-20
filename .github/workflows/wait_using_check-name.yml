@@ -8,6 +8,17 @@ on:
   workflow_dispatch:
 
 jobs:
+  success_waited_task_n1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: echo 'done'
+  success_unwaited_task_n1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: echo 'done'
+
   wait-for-check-name:
     runs-on: ubuntu-latest
     steps:
@@ -22,7 +33,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10 # seconds
           running-workflow-name: wait-for-check-name
-          check-name: simple-task
+          check-name: success_waited_task_n1
 
       - name: Delete tag
         run: git push --delete origin ${{ github.ref }}
@@ -30,3 +41,40 @@ jobs:
 
       - name: Success
         run: echo 'success!'
+
+# -- Test: Should fail when awaited task fails
+
+  failure_waited_task_n1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: false
+  failure_unwaited_task_n1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run a one-line script
+        run: false
+
+  wait-for-check-that-fails:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Wait on tests
+        uses: ./
+        with:
+          ref: ${{ github.sha }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10 # seconds
+          running-workflow-name: wait-for-check-name
+          check-name: failure_waited_task_n1
+
+      - uses: LouisBrunner/checks-action@v1.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: RSpec
+          conclusion: ${{ failure() }}
+          output: {"summary": "Fail as expected => success"}
