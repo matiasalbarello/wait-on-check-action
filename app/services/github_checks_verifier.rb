@@ -27,7 +27,7 @@ class GithubChecksVerifier < ApplicationService
     puts "Before any filter:"
     show_checks_conclusion_message(checks)
     checks.reject!{ |check| check.name == workflow_name }
-    puts "After filter out workflow_name (#{{workflow_name}}) and before selecting check_name (#{check_name})"
+    puts "After filter out workflow_name (#{workflow_name}) and before selecting check_name (#{check_name})"
     show_checks_conclusion_message(checks)
     checks.select!{ |check| check.name == check_name } if check_name.present?
     puts "After select check_name and before filter by regex (#{check_regexp})"
