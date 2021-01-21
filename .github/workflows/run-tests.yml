@@ -2,7 +2,7 @@ name: RSpec tests
 
 on:
   repository_dispatch:
-    types: run-specs
+    types: [run-specs, opened]
   push:
     paths-ignore:
       - 'README.md'
