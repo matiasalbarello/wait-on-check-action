@@ -8,12 +8,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  waited_task_n2:
+  regexp_waited_task_n2:
     runs-on: ubuntu-latest
     steps:
       - name: Run a one-line script
         run: echo 'done'
-  unwaited_task_n2:
+  regexp_unwaited_task_n2:
     runs-on: ubuntu-latest
     steps:
       - name: Run a one-line script
@@ -33,7 +33,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10 # seconds
           running-workflow-name: wait-for-check-regexp
-          check-regexp: \Awaited_.?
+          check-regexp: \Aregexp_waited_.?
 
       - name: Delete tag
         run: git push --delete origin ${{ github.ref }}
