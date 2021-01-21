@@ -1,11 +1,10 @@
 # frozen_string_literal: true
-require_relative "./application_service"
 require "active_support/configurable"
 
 require "json"
 require "octokit"
 
-class GithubChecksVerifier < ApplicationService
+class GithubChecksVerifier
   include ActiveSupport::Configurable
   config_accessor :check_name, :workflow_name, :client, :repo, :ref
   config_accessor(:wait) { 30 } # set a default

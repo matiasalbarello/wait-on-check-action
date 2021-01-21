@@ -16,4 +16,4 @@ GithubChecksVerifier.configure do |config|
   config.workflow_name = workflow_name
 end
 
-GithubChecksVerifier.call
+GithubChecksVerifier.new.call
