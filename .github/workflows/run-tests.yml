@@ -1,6 +1,8 @@
 name: RSpec tests
 
 on:
+  repository_dispatch:
+    types: run-specs
   push:
     paths-ignore:
       - 'README.md'
@@ -9,8 +11,6 @@ on:
       - 'README.md'
 
   workflow_dispatch:
-  repository_dispatch:
-    types: run-specs
 
 jobs:
   run-specs:
