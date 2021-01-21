@@ -55,9 +55,7 @@ class GithubChecksVerifier
     message = "Checks before filter:\n"
     message += checks_status_message(checks_before_filter)
     message += "\nFilters applied:"
-    message += filters_applied.reduce { |m, filter|
-      "#{m}#{filter["name"]}: #{filter["value"]}\n"
-    }
+    message += filters_applied.map{ |filter| "#{filter[:name]}: #{filter[:value]}"}.join('\n')
   end
 
   def fail_if_requested_check_never_run(all_checks, with_debug = true)
