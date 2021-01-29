@@ -78,12 +78,14 @@ describe GithubChecksVerifier do
 
   describe "#fail_if_requested_check_never_run" do
     it "raises an exception if check_name is not empty and all_checks is" do
-      check_name = 'test'
-      all_checks = []
+      all_checks = load_checks_from_yml("all_checks_results.json")
+      mock_api_response(all_checks)
+      service.config.check_name = 'test'
+      checks_after_filter = []
 
       expect do
-        service.fail_if_requested_check_never_run(check_name, all_checks)
-      end.to raise_error(StandardError, "The requested check was never run against this ref, exiting...")
+        service.fail_if_requested_check_never_run(checks_after_filter)
+      end.to raise_error(StandardError, /The requested check was never run against this ref, exiting .../)
     end
   end
 
