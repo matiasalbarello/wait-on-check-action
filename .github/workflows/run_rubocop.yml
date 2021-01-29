@@ -1,0 +1,17 @@
+# Worflow example
+name: Run Rubocop
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  rubocop-job:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - name: Rubocop checks
+        uses: luizfonseca/github-actions-rubocop@1.5.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
