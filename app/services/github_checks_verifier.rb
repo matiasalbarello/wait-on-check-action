@@ -47,7 +47,7 @@ class GithubChecksVerifier
   def get_debug_output
     checks_before_filter = query_check_status(false)
     filters_applied = [
-      { name: 'workflow_name', value: workflow_name },
+      {name: "workflow_name", value: workflow_name},
       { name: 'check_name', value: check_name },
       { name: 'check_regexp', value: check_regexp }
     ]
